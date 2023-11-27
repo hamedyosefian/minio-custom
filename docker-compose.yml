@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  minio:
+    image: minio/minio:RELEASE.2023-11-20T22-40-07Z
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER} # Ensure these environment variables are set
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data # Internal volume for MinIO's operational data
+      - data_write:/files # Additional internal volume for user-uploaded files
+      - minio_logs:/var/log/minio # NFS-mounted volume for logs
+    ports:
+      - "9000:9000" # Port for MinIO server access
+    command: server /data # Starts MinIO server with data directory
+    deploy:
+      restart_policy:
+        condition: on-failure # Restart policy in case of failure
+
+volumes:
+  minio_data: # Internal volume for MinIO data
+  data_write: # Internal volume for user files
+  minio_logs: # NFS-mounted volume for logs
+    driver: local
+    driver_opts:
+      type: 'nfs'
+      o: 'addr=192.168.110.130,nfsvers=4,username=holand,password=Mobedu@345,rw' # NFS mount options with credentials
+      device: ':/volume1/mobedu/minio' # Path on the NAS device
